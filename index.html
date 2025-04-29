@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Tester Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #2196F3;
+            --error: #f44336;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #333;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 0;
+            width: 200px;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .network-warning {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .flex {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="network-warning" id="networkWarning">
+        ⚠️ You're not on Sepolia Testnet! <button onclick="switchNetwork()">Switch to Sepolia</button>
+    </div>
+
+    <div class="card">
+        <h1>Wallet Tester Interface</h1>
+        
+        <!-- Wallet Connection Section -->
+        <div class="card">
+            <h2 class="section-title">Wallet Connection</h2>
+            <div id="walletInfo">
+                <p>Status: <span id="connectionStatus">Not connected</span></p>
+                <button id="connectButton" onclick="connectWallet()">Connect Wallet</button>
+                <div class="info-item">
+                    <p>Account: <span id="walletAddress">-</span></p>
+                    <p>Balance: <span id="walletBalance">-</span> ETH</p>
+                    <p>Network: <span id="networkInfo">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Information Section -->
+        <div class="card">
+            <h2 class="section-title">Contract State</h2>
+            <div class="info-item">
+                <p>Contract Address: <span id="contractAddress">-</span></p>
+                <p>Current Value: <span id="currentValue">-</span></p>
+                <p>Last Updater: <span id="lastUpdater">-</span></p>
+                <p>Update Count: <span id="updateCount">-</span></p>
+                <p>Contract Balance: <span id="contractBalance">-</span> ETH</p>
+            </div>
+        </div>
+
+        <!-- Contract Interaction Section -->
+        <div class="card">
+            <h2 class="section-title">Contract Interactions</h2>
+            
+            <!-- Set Value Section -->
+            <div class="interaction-section">
+                <h3>Set Value (Requires 0.01 ETH)</h3>
+                <div class="flex">
+                    <input type="number" id="newValue" placeholder="Enter new value">
+                    <input type="number" id="ethAmount" step="0.01" value="0.01" placeholder="ETH amount">
+                    <button onclick="setValue()">Set Value</button>
+                </div>
+            </div>
+
+            <!-- Withdraw Section -->
+            <div class="interaction-section">
+                <h3>Withdraw Funds</h3>
+                <button onclick="withdraw()" id="withdrawButton">Withdraw Contract Balance</button>
+                <p class="hint">Only the last updater can withdraw funds</p>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // Contract Configuration
+        const contractAddress = "0xc5F85665C616ddB5316042A85e95D7560426c778";
+        const contractABI = [
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_value",
+                    "type": "uint256"
+                }
+            ],
+            "name": "set",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "withdraw",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "get",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "getBalance",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "lastUpdater",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "storedValue",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "updateCount",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ];
+
+        let provider;
+        let signer;
+        let contract;
+        let currentAccount = null;
+
+        // Supported Networks
+        const SUPPORTED_NETWORKS = {
+            '0xaa36a7': 'Sepolia Testnet' // Sepolia Chain ID 11155111 (0xaa36a7 in hex)
+        };
+
+        async function init() {
+            if (window.ethereum) {
+                setupEventListeners();
+                await checkConnection();
+            } else {
+                showError("Please install MetaMask!");
+            }
+        }
+
+        async function checkConnection() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    currentAccount = accounts[0];
+                    setupProvider();
+                    updateUI();
+                }
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        function setupEventListeners() {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) handleDisconnect();
+                else currentAccount = accounts[0];
+                updateUI();
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                window.location.reload();
+            });
+        }
+
+        async function connectWallet() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                currentAccount = accounts[0];
+                setupProvider();
+                updateUI();
+                showStatus("Wallet connected successfully!", "success");
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        function setupProvider() {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
+        }
+
+        async function updateUI() {
+            updateWalletInfo();
+            updateContractInfo();
+            checkNetwork();
+            updateButtonStates();
+        }
+
+        async function updateWalletInfo() {
+            if (!currentAccount) return;
+
+            document.getElementById('connectionStatus').textContent = 'Connected';
+            document.getElementById('walletAddress').textContent = currentAccount;
+            
+            try {
+                const balance = await provider.getBalance(currentAccount);
+                const network = await provider.getNetwork();
+                
+                document.getElementById('walletBalance').textContent = 
+                    ethers.utils.formatEther(balance).substring(0, 6);
+                document.getElementById('networkInfo').textContent = 
+                    `${network.name} (Chain ID: ${network.chainId})`;
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        async function updateContractInfo() {
+            if (!contract) return;
+
+            try {
+                const value = await contract.get();
+                const lastUpdater = await contract.lastUpdater();
+                const updateCount = await contract.updateCount();
+                const contractBalance = await contract.getBalance();
+
+                document.getElementById('currentValue').textContent = value;
+                document.getElementById('lastUpdater').textContent = lastUpdater;
+                document.getElementById('updateCount').textContent = updateCount;
+                document.getElementById('contractBalance').textContent = 
+                    ethers.utils.formatEther(contractBalance);
+                document.getElementById('contractAddress').textContent = contractAddress;
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        async function setValue() {
+            const newValue = document.getElementById('newValue').value;
+            const ethAmount = document.getElementById('ethAmount').value;
+
+            if (!newValue || !ethAmount) {
+                showError("Please fill all fields");
+                return;
+            }
+
+            try {
+                showStatus("Sending transaction...", "info");
+                
+                const tx = await contract.set(newValue, {
+                    value: ethers.utils.parseEther(ethAmount)
+                });
+                
+                showStatus("Transaction sent! Waiting for confirmation...", "info");
+                await tx.wait();
+                
+                showStatus("Value updated successfully!", "success");
+                updateUI();
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        async function withdraw() {
+            try {
+                showStatus("Initiating withdrawal...", "info");
+                
+                const tx = await contract.withdraw();
+                
+                showStatus("Withdrawal transaction sent...", "info");
+                await tx.wait();
+                
+                showStatus("Funds withdrawn successfully!", "success");
+                updateUI();
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        async function checkNetwork() {
+            const network = await provider.getNetwork();
+            const networkWarning = document.getElementById('networkWarning');
+            
+            if (!SUPPORTED_NETWORKS[network.chainId]) {
+                networkWarning.style.display = 'block';
+            } else {
+                networkWarning.style.display = 'none';
+            }
+        }
+
+        async function switchNetwork() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }] // Sepolia Chain ID
+                });
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        function updateButtonStates() {
+            const withdrawButton = document.getElementById('withdrawButton');
+            // Add logic to check if current account is last updater
+            // withdrawButton.disabled = (currentAccount !== lastUpdater);
+        }
+
+        function handleError(error) {
+            console.error(error);
+            const message = error.error?.message || error.message || "Unknown error";
+            showStatus(`Error: ${message}`, "error");
+        }
+
+        function showStatus(message, type = "info") {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function showError(message) {
+            showStatus(message, "error");
+        }
+
+        // Initialize when page loads
+        window.onload = init;
+    </script>
+</body>
+</html>

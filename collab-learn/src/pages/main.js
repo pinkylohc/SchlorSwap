@@ -1,73 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserProvider, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { collabLearnABI, collabLearnAddress } from '../utils/contract';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
-function MainPage() {
-  const [account, setAccount] = useState('');
-  const [eduBalance, setEduBalance] = useState('0');
-  const [ethBalance, setEthBalance] = useState('0');
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [hasClaimed, setHasClaimed] = useState(false);
-  const [canClaimTokens, setCanClaimTokens] = useState(false);
+function MainPage({ 
+  account, 
+  ethBalance, 
+  eduBalance, 
+  provider, 
+  signer, 
+  network,
+  hasClaimed,
+  canClaimTokens,
+  setEduBalance,
+  setEthBalance,
+  setHasClaimed,
+  setCanClaimTokens
+}) {
   const [buyAmount, setBuyAmount] = useState('0.01');
   const [isLoading, setIsLoading] = useState(false);
-  const [network, setNetwork] = useState(null);
   const [claimStatus, setClaimStatus] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const init = async () => {
-      if (window.ethereum) {
-        const provider = new BrowserProvider(window.ethereum);
-        setProvider(provider);
-        
-        try {
-          const accounts = await provider.send("eth_requestAccounts", []);
-          if (accounts.length > 0) {
-            const signer = await provider.getSigner();
-            setSigner(signer);
-            setAccount(accounts[0]);
-            
-            // Get balances
-            const ethBal = await provider.getBalance(accounts[0]);
-            setEthBalance(ethers.formatEther(ethBal).substring(0, 6));
-            
-            const contract = new ethers.Contract(
-              collabLearnAddress,
-              collabLearnABI,
-              signer
-            );
-            
-            // Get token balance
-            const eduBal = await contract.balanceOf(accounts[0]);
-            setEduBalance(ethers.formatUnits(eduBal, 18));
-            
-            // Check claim status
-            const claimedStatus = await contract.hasClaimed(accounts[0]);
-            setHasClaimed(claimedStatus);
-            
-            const canClaim = await contract.canClaim(accounts[0]);
-            setCanClaimTokens(canClaim);
-            
-            if (claimedStatus) {
-              setClaimStatus('You have already claimed your initial tokens');
-            } else if (!canClaim) {
-              setClaimStatus('Cannot claim tokens at this time');
-            }
-            
-            const network = await provider.getNetwork();
-            setNetwork(network);
-          }
-        } catch (error) {
-          console.error("Error initializing:", error);
-        }
-      }
-    };
-    
-    init();
-  }, []);
 
   const claimTokens = async () => {
     if (!signer || !canClaimTokens) return;
@@ -82,7 +35,6 @@ function MainPage() {
         signer
       );
       
-      // Double-check claim status before sending transaction
       const canStillClaim = await contract.canClaim(account);
       if (!canStillClaim) {
         setClaimStatus('Cannot claim tokens at this time');
@@ -95,18 +47,15 @@ function MainPage() {
       
       await tx.wait();
       
-      // Update statuses after successful claim
       setHasClaimed(true);
       setCanClaimTokens(false);
       setClaimStatus('Success! You claimed your EDU tokens');
       
-      // Refresh balances
       const balance = await contract.balanceOf(account);
       setEduBalance(ethers.formatUnits(balance, 18));
     } catch (error) {
       console.error("Error claiming tokens:", error);
       
-      // Handle specific error cases
       if (error.message.includes("Already claimed initial tokens")) {
         setClaimStatus('You have already claimed your initial tokens');
         setHasClaimed(true);
@@ -136,7 +85,6 @@ function MainPage() {
       const balance = await contract.balanceOf(account);
       setEduBalance(ethers.formatUnits(balance, 18));
       
-      // Update ETH balance
       const ethBal = await provider.getBalance(account);
       setEthBalance(ethers.formatEther(ethBal).substring(0, 6));
     } catch (error) {
@@ -147,8 +95,8 @@ function MainPage() {
   };
 
   const galleryItems = [
-    { title: "Course Marketplace", path: "/courses" },
-    { title: "Learning Dashboard", path: "/dashboard" },
+    { title: "Marketplace", path: "/marketplace" },
+    { title: "Exchange Resource", path: "/exchange" },
     { title: "Community Forum", path: "/forum" },
     { title: "Reward Center", path: "/rewards" }
   ];
@@ -158,9 +106,9 @@ function MainPage() {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Token Management</h1>
         
-        {network && network.chainId !== 11155111n && (
+        {network && network.chainId !== 17000n && (
           <div className="mb-6 p-4 bg-orange-100 text-orange-700 rounded-lg">
-            ⚠️ You're not on Sepolia Testnet! Please switch to Sepolia to use this application.
+            ⚠️ You're not on Holesky Testnet! Please switch to Holesky to use this application.
           </div>
         )}
         
@@ -197,7 +145,7 @@ function MainPage() {
                   ? 'Already Claimed' 
                   : isLoading 
                     ? 'Processing...' 
-                    : 'Claim 100 Free EDU Tokens'}
+                    : 'Claim 10 Free EDU Tokens'}
               </button>
               
               {claimStatus && (

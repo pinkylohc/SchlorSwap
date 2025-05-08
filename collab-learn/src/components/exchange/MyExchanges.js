@@ -72,7 +72,7 @@ const MyExchanges = ({ contract, account, onAccept, onDecline, onRate, onClaimEx
         counterpartyDesc: details.descriptions[1],
         ratings: details.ratings,
         ratingDeadline: Number(details.ratingDeadline),
-        deadline: Number(summary.numbers[2])
+        //deadline: Number(summary.numbers[2])
       };
     } catch (error) {
       console.error(`Error loading exchange ${exchangeId}:`, error);
@@ -176,11 +176,6 @@ const MyExchanges = ({ contract, account, onAccept, onDecline, onRate, onClaimEx
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-blue-600">{ex.stake} EDU</p>
-                  {ex.status === 'Pending' && (
-                    <p className="text-sm text-gray-500">
-                      Expires: {new Date(ex.deadline * 1000).toLocaleDateString()}
-                    </p>
-                  )}
                   {ex.status === 'Accepted' && (
                     <p className="text-sm text-gray-500">
                       Rate by: {new Date(ex.ratingDeadline * 1000).toLocaleDateString()}
@@ -197,11 +192,11 @@ const MyExchanges = ({ contract, account, onAccept, onDecline, onRate, onClaimEx
               )}
 
               {/* Show decrypted content for Accepted or Completed exchanges */}
-              {(ex.status === 'Accepted' || ex.status === 'Completed') && (
+              {(ex.status === 'Accepted' || ex.status === 'Completed' || ex.status === 'Expired') && (
                 <>
                   {decryptedContents[ex.id]?.initiator && (
                     <div className="mt-2">
-                      <p className="font-medium">Your Content:</p>
+                      <p className="font-medium">initiator Content:</p>
                       <a 
                         href={decryptedContents[ex.id].initiator} 
                         target="_blank" 
@@ -258,19 +253,19 @@ const MyExchanges = ({ contract, account, onAccept, onDecline, onRate, onClaimEx
                 </>
               )}
 
-              {ex.status === 'Pending' && Date.now()/1000 > ex.deadline && (
+              {/*{ex.status === 'Pending' && (
                 <button
                   onClick={() => handleClaimExpired(ex.id)}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                   disabled={actionLoading[ex.id]}
                 >
-                  Claim Expired
+                  Dsiable the Exchange
                 </button>
-              )}
+              )}*/}
 
               {(ex.status === 'Accepted' || ex.status === 'Completed') && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Rate Your Counterparty:</p>
+                  <p className="text-sm font-medium">Rate Your Opponent:</p>
                   <div className="flex gap-1">
                     {[1,2,3,4,5].map(n => (
                       <button

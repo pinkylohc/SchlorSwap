@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import crypto from 'crypto-js';
 
-const CreateExchange = ({ contract, onCreate }) => {
+const CreateExchange = ({ contract, onCreate, showNotification }) => {
   const [formData, setFormData] = useState({
     contentLink: '',
     description: '',
@@ -19,10 +19,15 @@ const CreateExchange = ({ contract, onCreate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.contentLink || !formData.description || !formData.requirement || !formData.stake) {
+      alert('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
     try {
       const encryptedContentLink = encryptData(formData.contentLink);
-
       await onCreate(
         encryptedContentLink,
         formData.description,
@@ -32,27 +37,29 @@ const CreateExchange = ({ contract, onCreate }) => {
       setFormData({ contentLink: '', description: '', requirement: '', stake: '' });
     } catch (error) {
       console.error("Error creating exchange:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="flex justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-xl bg-blue-100 p-8 rounded-lg shadow-md">
+      <form onSubmit={handleSubmit} className="w-full max-w-xl bg-white p-8 rounded-lg shadow-md border">
         <h2 className="text-2xl font-bold mb-6 text-center">Create New Exchange</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-gray-700 mb-2">Content Link</label>
+            <label className="block text-gray-700 mb-2">Content Link*</label>
             <input
               required
               value={formData.contentLink}
               onChange={e => setFormData({...formData, contentLink: e.target.value})}
               className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your content link"
+              disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Description</label>
+            <label className="block text-gray-700 mb-2">Description*</label>
             <textarea
               required
               value={formData.description}
@@ -60,37 +67,47 @@ const CreateExchange = ({ contract, onCreate }) => {
               className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows="3"
               placeholder="Describe your content"
+              disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Requirements</label>
+            <label className="block text-gray-700 mb-2">Requirements*</label>
             <input
               required
               value={formData.requirement}
               onChange={e => setFormData({...formData, requirement: e.target.value})}
               className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="What are you looking for?"
+              disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Stake Amount (EDU)</label>
+            <label className="block text-gray-700 mb-2">Stake Amount (EDU)*</label>
             <input
               type="number"
               required
-              min="1"
               value={formData.stake}
               onChange={e => setFormData({...formData, stake: e.target.value})}
               className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter stake amount"
+              disabled={loading}
             />
           </div>
           <button 
             type="submit" 
-            className={`w-full bg-blue-600 text-white px-4 py-2 rounded transition-colors 
-              ${loading || !formData.contentLink || !formData.description || !formData.requirement || !formData.stake ? 'opacity-70 bg-gray-500 cursor-not-allowed' : ''}`}
+            className={`w-full bg-blue-600 text-white px-4 py-3 rounded transition-colors flex items-center justify-center ${
+              loading || !formData.contentLink || !formData.description || !formData.requirement || !formData.stake 
+                ? 'opacity-70 cursor-not-allowed' 
+                : 'hover:bg-blue-700'
+            }`}
             disabled={loading || !formData.contentLink || !formData.description || !formData.requirement || !formData.stake}
           >
-            {loading ? 'Creating...' : 'Create Exchange'}
+            {loading ? (
+              <>
+                <span className="animate-spin inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                Creating Exchange...
+              </>
+            ) : 'Create Exchange'}
           </button>
         </div>
       </form>

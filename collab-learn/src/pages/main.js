@@ -35,13 +35,6 @@ function MainPage({
         signer
       );
       
-      const canStillClaim = await contract.canClaim(account);
-      if (!canStillClaim) {
-        setClaimStatus('Cannot claim tokens at this time');
-        setIsLoading(false);
-        return;
-      }
-      
       const tx = await contract.claimInitialTokens();
       setClaimStatus('Transaction sent. Waiting for confirmation...');
       
@@ -94,111 +87,166 @@ function MainPage({
     setIsLoading(false);
   };
 
-  const galleryItems = [
-    { title: "Marketplace", path: "/marketplace" },
-    { title: "Exchange Resource", path: "/exchange" },
-    { title: "Community Forum", path: "/forum" },
-    { title: "Reward Center", path: "/rewards" }
+  const features = [
+    { 
+      title: "Resource Marketplace", 
+      description: "Buy and sell educational materials", 
+      path: "/marketplace",
+      icon: "📚",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-800"
+    },
+    { 
+      title: "Knowledge Exchange", 
+      description: "Trade resources with other learners", 
+      path: "/exchange",
+      icon: "🔄",
+      bgColor: "bg-purple-100",
+      textColor: "text-purple-800"
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Token Management</h1>
+        {/* Header Section */}
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">ScholarSwap</h1>
+          <p className="text-xl text-gray-600 mx-auto">
+            A decentralized platform for trading educational resources using blockchain technology
+          </p>
+        </div>
         
+        {/* Network Warning */}
         {network && network.chainId !== 17000n && (
-          <div className="mb-6 p-4 bg-orange-100 text-orange-700 rounded-lg">
+          <div className="mb-8 p-4 bg-orange-100 text-orange-700 rounded-lg border border-orange-200 max-w-2xl mx-auto">
             ⚠️ You're not on Holesky Testnet! Please switch to Holesky to use this application.
           </div>
         )}
         
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Token Balances</h2>
+        {/* Balance Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-12 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Your Wallet</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-800 mb-2">Wallet Information</h3>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">Account:</span> {account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : 'Not connected'}
-              </p>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">ETH Balance:</span> {ethBalance}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-medium">EDU Tokens:</span> {eduBalance}
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Account Info */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <p className="font-medium text-gray-700">
+                  {account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : 'Not connected'}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">ETH Balance:</span>
+                  <span className="font-medium">{ethBalance} ETH</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">EDU Tokens:</span>
+                  <span className="font-medium">{eduBalance} EDU</span>
+                </div>
+              </div>
             </div>
             
-            <div className="space-y-4">
-              <button
-                onClick={claimTokens}
-                disabled={hasClaimed || isLoading || !account || !canClaimTokens}
-                className={`w-full py-2 px-4 rounded-lg ${
-                  hasClaimed 
-                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                    : !canClaimTokens
-                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+            {/* Token Actions */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <button
+                  onClick={claimTokens}
+                  disabled={hasClaimed || isLoading || !account || !canClaimTokens}
+                  className={`w-full py-3 px-4 rounded-lg flex items-center justify-center ${
+                    hasClaimed || !canClaimTokens || !account
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white'
-                } transition-colors`}
-              >
-                {hasClaimed 
-                  ? 'Already Claimed' 
-                  : isLoading 
-                    ? 'Processing...' 
-                    : 'Claim 10 Free EDU Tokens'}
-              </button>
+                  } transition-colors`}
+                >
+                  {hasClaimed 
+                    ? '🎁 Tokens Claimed' 
+                    : isLoading 
+                      ? '⏳ Processing...' 
+                      : '🎁 Claim 10 Free EDU (For First Time Access)'}
+                </button>
+                
+                {claimStatus && (
+                  <p className={`text-sm text-center ${
+                    claimStatus.includes('Success') 
+                      ? 'text-green-600'
+                      : claimStatus.includes('Error') || claimStatus.includes('Cannot')
+                        ? 'text-red-600'
+                        : 'text-gray-600'
+                  }`}>
+                    {claimStatus}
+                  </p>
+                )}
+              </div>
               
-              {claimStatus && (
-                <p className={`text-sm ${
-                  claimStatus.includes('Success') 
-                    ? 'text-green-600'
-                    : claimStatus.includes('Error') || claimStatus.includes('Cannot')
-                      ? 'text-red-600'
-                      : 'text-gray-600'
-                }`}>
-                  {claimStatus}
-                </p>
-              )}
-              
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center space-x-2">
+              <div className="space-y-2">
+                <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden">
                   <input
                     type="number"
                     value={buyAmount}
                     onChange={(e) => setBuyAmount(e.target.value)}
                     min="0.01"
                     step="0.01"
-                    className="flex-1 p-2 border rounded-lg"
+                    className="flex-1 p-3 bg-transparent outline-none"
                     placeholder="ETH amount"
                   />
-                  <span className="text-gray-600">ETH</span>
+                  <span className="px-3 text-gray-500">ETH</span>
                 </div>
                 <button
                   onClick={buyTokens}
                   disabled={isLoading || !account}
-                  className="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center"
                 >
-                  {isLoading ? 'Processing...' : 'Buy EDU Tokens'}
+                  {isLoading ? '⏳ Processing...' : '💳 Buy EDU Tokens'}
                 </button>
-                <p className="text-sm text-gray-500">
-                  Current rate: 0.001 ETH = 1 EDU tokens
+                <p className="text-xs text-center text-gray-500">
+                  0.001 ETH = 1 EDU 
                 </p>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Explore Features</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {galleryItems.map((item, index) => (
+        {/* Features Gallery */}
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Platform Features</h2>
+          {!account && (
+          <div className="flex items-center justify-center mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <span className="font-medium">Wallet not connected!</span> Please connect your wallet to access these features.
+              </p>
+            </div>
+          </div>
+        )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {features.map((feature, index) => (
               <div 
                 key={index}
-                className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
-                onClick={() => navigate(item.path)}
+                className={`${feature.bgColor} p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-1`}
+                onClick={() => navigate(feature.path)}
               >
-                <h3 className="font-medium text-gray-800">{item.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">Click to explore →</p>
+                <div className="flex items-start space-x-4">
+                  <span className="text-3xl">{feature.icon}</span>
+                  <div>
+                    <h3 className={`${feature.textColor} font-bold text-lg mb-1`}>{feature.title}</h3>
+                    <p className="text-gray-700">{feature.description}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <span className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                    Explore →
+                  </span>
+                </div>
               </div>
             ))}
           </div>

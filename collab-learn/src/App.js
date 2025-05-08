@@ -16,7 +16,7 @@ function App() {
   const [signer, setSigner] = useState(null);
   const [network, setNetwork] = useState(null);
   const [hasClaimed, setHasClaimed] = useState(false);
-  const [canClaimTokens, setCanClaimTokens] = useState(false);
+  const [canClaimTokens, setCanClaimTokens] = useState(true);
 
   const connectWallet = async () => {
     try {
@@ -53,12 +53,34 @@ function App() {
       const claimedStatus = await contract.hasClaimed(accounts[0]);
       setHasClaimed(claimedStatus);
       
-      const canClaim = await contract.canClaim(accounts[0]);
-      setCanClaimTokens(canClaim);
+      /*const canClaim = await contract.canClaim(accounts[0]);
+      setCanClaimTokens(canClaim);*/
 
     } catch (error) {
       console.error("Wallet connection error:", error);
       alert(`Error connecting wallet: ${error.message}`);
+    }
+  };
+
+
+  const updateBalances = async () => {
+    if (!provider || !account) return;
+    
+    try {
+      // Update ETH balance
+      const ethBal = await provider.getBalance(account);
+      setEthBalance(ethers.formatEther(ethBal).substring(0, 6));
+      
+      // Update EDU balance
+      const contract = new ethers.Contract(
+        collabLearnAddress,
+        collabLearnABI,
+        signer
+      );
+      const eduBal = await contract.balanceOf(account);
+      setEduBalance(ethers.formatUnits(eduBal, 18));
+    } catch (error) {
+      console.error("Error updating balances:", error);
     }
   };
 
@@ -73,9 +95,20 @@ function App() {
         }
       }
     };
-
     checkExistingConnection();
   }, []);
+
+  useEffect(() => {
+    if (!provider || !account) return;
+  
+    // Set up an interval to update balances every second
+    const interval = setInterval(() => {
+      updateBalances();
+    }, 1000); // 1000ms = 1 second
+  
+    // Clear the interval when the component unmounts or dependencies change
+    return () => clearInterval(interval);
+  }, [provider, account]); 
 
   // Handle account changes
   useEffect(() => {
@@ -132,7 +165,16 @@ function App() {
             setCanClaimTokens={setCanClaimTokens}
           />
         } />
-        <Route path="/marketplace" element={<Marketplace/>} />
+        <Route 
+          path="/marketplace" 
+          element={
+            <Marketplace
+              account={account}
+              updateBalances={updateBalances}
+            />
+          } 
+        />
+
         <Route path="/exchange" element={<FileExchange/>} />
       </Routes>
     </Router>

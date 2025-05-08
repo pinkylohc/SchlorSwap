@@ -1,87 +1,6 @@
-export const collabLearnAddress = "0x53CBbbB5f61AC8F197D9a12429e51a93829334C7";
+export const collabLearnAddress = "0x013eC95B0011F9A9A8d1F4078795EE98e6247cF7";
 
 export const collabLearnABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "exchangeId",
-				"type": "uint256"
-			}
-		],
-		"name": "acceptExchange",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "buyTokens",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "exchangeId",
-				"type": "uint256"
-			}
-		],
-		"name": "claimExpired",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "claimInitialTokens",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "contentLink",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "requirement",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "stakeAmount",
-				"type": "uint256"
-			}
-		],
-		"name": "createExchange",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "exchangeId",
-				"type": "uint256"
-			}
-		],
-		"name": "declineExchange",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -203,45 +122,42 @@ export const collabLearnABI = [
 		"type": "event"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
 				"internalType": "uint256",
-				"name": "exchangeId",
+				"name": "listingId",
 				"type": "uint256"
 			},
 			{
-				"internalType": "string",
-				"name": "contentLink",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
+				"indexed": false,
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
 			}
 		],
-		"name": "matchExchange",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
+		"name": "ListingCreated",
+		"type": "event"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
 				"internalType": "uint256",
-				"name": "exchangeId",
+				"name": "listingId",
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint8",
-				"name": "rating",
-				"type": "uint8"
+				"indexed": false,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
 			}
 		],
-		"name": "rateExchange",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
+		"name": "ListingPurchased",
+		"type": "event"
 	},
 	{
 		"anonymous": false,
@@ -249,31 +165,18 @@ export const collabLearnABI = [
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "user",
+				"name": "buyer",
 				"type": "address"
 			},
 			{
 				"indexed": false,
-				"internalType": "int256",
-				"name": "change",
-				"type": "int256"
+				"internalType": "bytes32",
+				"name": "commitment",
+				"type": "bytes32"
 			}
 		],
-		"name": "ReputationUpdated",
+		"name": "PurchaseCommitted",
 		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenPrice",
-				"type": "uint256"
-			}
-		],
-		"name": "setTokenPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -320,30 +223,6 @@ export const collabLearnABI = [
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_value",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -370,7 +249,26 @@ export const collabLearnABI = [
 	},
 	{
 		"inputs": [],
-		"name": "withdraw",
+		"name": "MAX_SUPPLY",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "exchangeId",
+				"type": "uint256"
+			}
+		],
+		"name": "acceptExchange",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -397,12 +295,65 @@ export const collabLearnABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
 			}
 		],
-		"name": "canClaim",
+		"name": "buyListing",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "buyTokens",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "exchangeId",
+				"type": "uint256"
+			}
+		],
+		"name": "claimAfterRatingDeadline",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "claimInitialTokens",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "commitment",
+				"type": "bytes32"
+			}
+		],
+		"name": "commitToMatchExchange",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "commitments",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -411,6 +362,70 @@ export const collabLearnABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "contentLink",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "requirement",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "stakeAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "createExchange",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "contentLink",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			}
+		],
+		"name": "createListing",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "exchangeId",
+				"type": "uint256"
+			}
+		],
+		"name": "declineExchange",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -444,12 +459,7 @@ export const collabLearnABI = [
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "enum CollabLearn.Status",
+				"internalType": "enum SchlorSwap.Status",
 				"name": "status",
 				"type": "uint8"
 			}
@@ -525,25 +535,6 @@ export const collabLearnABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "expiredProcessed",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "getActiveExchanges",
 		"outputs": [
@@ -551,6 +542,41 @@ export const collabLearnABI = [
 				"internalType": "uint256[]",
 				"name": "",
 				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllListings",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "contentLink",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct SchlorSwap.Listing[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -625,12 +651,12 @@ export const collabLearnABI = [
 				"type": "address[2]"
 			},
 			{
-				"internalType": "uint256[3]",
+				"internalType": "uint256[2]",
 				"name": "numbers",
-				"type": "uint256[3]"
+				"type": "uint256[2]"
 			},
 			{
-				"internalType": "enum CollabLearn.Status",
+				"internalType": "enum SchlorSwap.Status",
 				"name": "status",
 				"type": "uint8"
 			},
@@ -683,7 +709,7 @@ export const collabLearnABI = [
 	},
 	{
 		"inputs": [],
-		"name": "MAX_SUPPLY",
+		"name": "listingCount",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -697,25 +723,81 @@ export const collabLearnABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "address",
+				"internalType": "uint256",
 				"name": "",
-				"type": "address"
+				"type": "uint256"
 			}
 		],
-		"name": "reputations",
+		"name": "listings",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "score",
-				"type": "uint256"
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "contentLink",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
 			},
 			{
 				"internalType": "uint256",
-				"name": "lastUpdated",
+				"name": "price",
 				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "exchangeId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "contentLink",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "secret",
+				"type": "bytes32"
+			}
+		],
+		"name": "matchExchange",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "exchangeId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint8",
+				"name": "rating",
+				"type": "uint8"
+			}
+		],
+		"name": "rateExchange",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -753,6 +835,13 @@ export const collabLearnABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]

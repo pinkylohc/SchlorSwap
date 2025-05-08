@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface EduToken { // define the erc20 token
-    function transfer(address _to, uint256 _value) external returns (bool);
+
+interface SwapToken { // define the Swaptoken, follow ERC20 standard
+    //function _transfer(address from, address to, uint256 amount) external returns  (bool);
     function totalSupply() external view returns (uint256);
     function balanceOf(address _owner) external view returns (uint256);
-    //function approve(address _spender, uint256 _value) external returns (bool);
-    //function transferFrom(address _from, address _to, uint256 _value) external returns (bool);
+    
     
     event Transfer(address indexed from, address indexed to, uint256 value);
 }
 
 
-contract CollabLearn is EduToken{
-
-
+contract SchlorSwap is SwapToken, ReentrancyGuard{
     // -----------------------------------------
-    // EduToken State & Functions
+    // SwapToken State & Functions
     // -----------------------------------------
     address owner; // only for address owner
 
@@ -34,13 +33,13 @@ contract CollabLearn is EduToken{
     }
 
     modifier onlyOwner() {  // limit access to own the contract owner   // adjust token price
-        require(msg.sender == owner, "Only owner can call this");
+        require(msg.sender == owner, "Only owner");
         _;
     }
 
     // allow user get 10 eduToken for first time connect the wallet
     function claimInitialTokens() external {   // gas fee
-        require(!_hasClaimedTokens[msg.sender], "Already claimed initial tokens");  // check if prev claimed
+        require(!_hasClaimedTokens[msg.sender], "Already claimed");  // check if prev claimed
         _mint(msg.sender, 10 * (10**uint256(18)));
          _hasClaimedTokens[msg.sender] = true;
         emit TokensClaimed(msg.sender, 10 * (10**uint256(18)));
@@ -51,32 +50,26 @@ contract CollabLearn is EduToken{
     }
 
     // Add this view function to check eligibility
-    function canClaim(address user) external view returns (bool) {
+    /*function canClaim(address user) external view returns (bool) {
         return !_hasClaimedTokens[user] && (_totalSupply +  10 * (10**uint256(18)) <= MAX_SUPPLY);
-    }
+    }*/
 
     // 0.001 ether to buy 1 eduToken
-    function buyTokens() public payable {
-        require(msg.value > 0, "Must send ETH to buy tokens");
+    function buyTokens() public payable nonReentrant{
+        require(msg.value > 0, "Must send ETH to buy");
         uint256 tokensToBuy = (msg.value * 10**uint256(18)) / (0.001 ether); // 0.001 ether == 1 eduToken
 
-        require(tokensToBuy >= 1, "Minimum purchase is 0.001 ETH for 1 token");
-        require(_totalSupply + tokensToBuy <= MAX_SUPPLY, "Exceeds maximum token supply");
+        //require(tokensToBuy >= 1, "Minimum purchase is 0.001 ETH");
+        require(_totalSupply + tokensToBuy <= MAX_SUPPLY, "Exceeds maximum supply");
 
         _mint(msg.sender, tokensToBuy);
-
-        // Return leftover ETH
-        /*uint256 exactCost = tokensToBuy * TOKEN_PRICE;
-        if (msg.value > exactCost) {
-            payable(msg.sender).transfer(msg.value - exactCost);
-        }*/
 
         emit TokensPurchased(msg.sender, msg.value, tokensToBuy);
     } 
 
     // mint new token to a addr.
     function _mint(address account, uint256 amount) internal { 
-        require(account != address(0), "ERC20: mint to the zero address");
+        require(account != address(0), "mint to null addr");
         
         _totalSupply += amount;
         _balances[account] += amount;
@@ -94,7 +87,7 @@ contract CollabLearn is EduToken{
     }
 
     // send token from msg.sender to other account
-    function transfer(address _to, uint256 _value) public override returns (bool) {
+    /*function transfer(address _to, uint256 _value) public override returns (bool) {
         require(_to != address(0), "eduToken: transfer to the zero address");
         require(_balances[msg.sender] >= _value, "EduToken: insufficient balance");
         require(_balances[_to] + _value >= _balances[_to], "uint256 overflow");
@@ -103,7 +96,7 @@ contract CollabLearn is EduToken{
         _balances[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
         return true;
-    }
+    }*/
 
     function _transfer(address from, address to, uint256 amount) internal {
         require(to != address(0), "Transfer to zero address");
@@ -119,45 +112,16 @@ contract CollabLearn is EduToken{
         payable(owner).transfer(address(this).balance);
     }
 
-    function setTokenPrice(uint256 tokenPrice) external onlyOwner{
-        // owner can change token price
-    }
-
-
-    // -----------------------------------------
-    // Reputation system (user credit - rate by other)
-    // -----------------------------------------
-    struct Reputation {
-        uint256 score;
-        uint256 lastUpdated;
-    }
-    
-    mapping(address => Reputation) public reputations;
-    event ReputationUpdated(address indexed user, int256 change);
-
-    function _updateReputation(address user, int256 change) internal{
-
-    }
-
-    // -----------------------------------------
-    // active system (user daily activity - gain point by access service)
-    // -----------------------------------------
-
 
     // -----------------------------------------
     // Exchange (exchange education resource)
     // -----------------------------------------
-    // File Exchange Section in CollabLearn.sol
-    // SPDX-License-Identifier: MIT
-
-    // Exchange System
-    // Exchange System
     struct ExchangeCore {
         address initiator;
         address counterparty;
         uint256 stakeAmount;
         uint256 createdAt;
-        uint256 deadline;
+        //uint256 deadline;
         Status status;
     }
 
@@ -178,7 +142,7 @@ contract CollabLearn is EduToken{
     mapping(uint256 => ExchangeCore) public exchangeCores;
     mapping(uint256 => ExchangeDetails) public exchangeDetails;
     mapping(address => uint256[]) public userExchanges;
-    mapping(uint256 => bool) public expiredProcessed;
+    mapping(bytes32 => bool) public commitments; // Add commitment mapping
 
     event ExchangeCreated(uint256 indexed exchangeId, address indexed initiator);
     event ExchangeMatched(uint256 indexed exchangeId, address indexed counterparty);
@@ -187,6 +151,7 @@ contract CollabLearn is EduToken{
     event ExchangeRated(uint256 indexed exchangeId, address indexed rater, uint8 rating);
     event ExchangeCompleted(uint256 indexed exchangeId);
     event ExchangeExpired(uint256 indexed exchangeId);
+    event PurchaseCommitted(address indexed buyer, bytes32 commitment); // Add commitment event
 
     function createExchange(
         string calldata contentLink, 
@@ -205,7 +170,7 @@ contract CollabLearn is EduToken{
             counterparty: address(0),
             stakeAmount: stakeAmount,
             createdAt: block.timestamp,
-            deadline: block.timestamp + 7 days,
+            //deadline: block.timestamp + 7 days,
             status: Status.Pending
         });
 
@@ -225,26 +190,41 @@ contract CollabLearn is EduToken{
         emit ExchangeCreated(newExchangeId, msg.sender);
     }
 
+    function commitToMatchExchange(bytes32 commitment) external {
+        commitments[commitment] = true;
+        emit PurchaseCommitted(msg.sender, commitment);
+    }
 
-    // - match if the counterpary == exchange owner
     function matchExchange(
-    uint256 exchangeId, 
-    string calldata contentLink, // This should be encrypted on frontend
-    string calldata description
+        uint256 exchangeId, 
+        string calldata contentLink,
+        string calldata description,
+        bytes32 secret
     ) external {
         ExchangeCore storage core = exchangeCores[exchangeId];
         ExchangeDetails storage details = exchangeDetails[exchangeId];
 
+        // Verify commitment using checksum address
+        bytes32 commitment = keccak256(
+            abi.encodePacked(
+                exchangeId,
+                msg.sender, // msg.sender is already in checksum format
+                secret
+            )
+        );
+        require(commitments[commitment], "No valid commitment");
         require(core.status == Status.Pending, "Not available");
         require(_balances[msg.sender] >= core.stakeAmount, "Insufficient stake");
+        require(msg.sender != core.initiator, "Cannot match own");
         
         core.counterparty = msg.sender;
         core.status = Status.Matched;
-        details.counterpartyContent = contentLink; // Store encrypted string directly
+        details.counterpartyContent = contentLink;
         details.counterpartyDescription = description;
         
         _transfer(msg.sender, address(this), core.stakeAmount);
         userExchanges[msg.sender].push(exchangeId);
+        delete commitments[commitment]; // Clear the commitment
         emit ExchangeMatched(exchangeId, msg.sender);
     }
 
@@ -262,9 +242,12 @@ contract CollabLearn is EduToken{
         ExchangeCore storage core = exchangeCores[exchangeId];
         require(msg.sender == core.initiator, "Only initiator");
         
-        _refundStakes(exchangeId);
-        
         core.status = Status.Pending;
+
+        //_refundStakes(exchangeId);
+        if(core.counterparty != address(0)) { // send the stake back to counterparty
+            _transfer(address(this), core.counterparty, core.stakeAmount);
+        }
         core.counterparty = address(0);
         exchangeDetails[exchangeId].counterpartyContent ="";
         exchangeDetails[exchangeId].counterpartyDescription = "";
@@ -296,16 +279,17 @@ contract CollabLearn is EduToken{
         }
     }
 
-    function claimExpired(uint256 exchangeId) external {
+    /*function claimExpired(uint256 exchangeId) external {
+        // use for disable the trasaction when in pending status
         ExchangeCore storage core = exchangeCores[exchangeId];
-        require(block.timestamp > core.deadline, "Not expired");
-        require(!expiredProcessed[exchangeId], "Already processed");
+        //require(block.timestamp > core.deadline, "Not expired");
+        require(core.status == Status.Pending, "Disable Not Allowed");
+        require(core.status != Status.Expired, "Already processed");
         
-        expiredProcessed[exchangeId] = true;
-        _refundStakes(exchangeId);
         core.status = Status.Expired;
+        _refundStakes(exchangeId);
         emit ExchangeExpired(exchangeId);
-    }
+    }*/
 
     function _refundStakes(uint256 exchangeId) internal {
         ExchangeCore memory core = exchangeCores[exchangeId];
@@ -315,17 +299,42 @@ contract CollabLearn is EduToken{
         }
     }
 
+    function claimAfterRatingDeadline(uint256 exchangeId) external {
+        ExchangeCore storage core = exchangeCores[exchangeId];
+        ExchangeDetails storage details = exchangeDetails[exchangeId];
+        
+        require(core.status == Status.Accepted, "Exchange not in accepted state");
+        require(block.timestamp > details.ratingDeadline, "Rating period not expired");
+        
+        // Only participants can claim
+        require(msg.sender == core.initiator || msg.sender == core.counterparty, 
+            "Not a participant");
+        
+        // If both have rated, this should have been finalized already
+        require(!(details.initiatorRating > 0 && details.counterpartyRating > 0), 
+            "Exchange already rated by both");
+        
+        _finalizeExchange(exchangeId);
+    }
+
     function _finalizeExchange(uint256 exchangeId) internal {
         ExchangeCore storage core = exchangeCores[exchangeId];
         ExchangeDetails storage details = exchangeDetails[exchangeId];
         
         uint256 initiatorShare = core.stakeAmount;
         uint256 counterpartyShare = core.stakeAmount;
-        uint256 burnAmount;
+        uint256 burnAmount = 0;
 
-        if(details.initiatorRating < 3 || details.counterpartyRating < 3) {
-            if(details.initiatorRating < 3) initiatorShare = core.stakeAmount * 80 / 100; // 20% penalty
-            if(details.counterpartyRating < 3) counterpartyShare = core.stakeAmount * 80 / 100; // 20% penalty
+        // Only apply penalties if at least one party rated poorly
+        if((details.initiatorRating > 0 && details.initiatorRating < 3) || 
+        (details.counterpartyRating > 0 && details.counterpartyRating < 3)) {
+            
+            if(details.initiatorRating > 0 && details.initiatorRating < 3) {
+                counterpartyShare = core.stakeAmount * 80 / 100; // 20% penalty
+            }
+            if(details.counterpartyRating > 0 && details.counterpartyRating < 3) {
+                initiatorShare = core.stakeAmount * 80 / 100; // 20% penalty
+            }
             burnAmount = (core.stakeAmount * 2) - (initiatorShare + counterpartyShare);
         }
 
@@ -340,7 +349,6 @@ contract CollabLearn is EduToken{
         core.status = Status.Completed;
         emit ExchangeCompleted(exchangeId);
     }
-
     // View functions
     function getExchangeContent(uint256 exchangeId) external view returns (
         string memory initiatorContent,
@@ -378,14 +386,14 @@ contract CollabLearn is EduToken{
 
     function getExchangeSummary(uint256 exchangeId) external view returns (
         address[2] memory participants,
-        uint256[3] memory numbers,
+        uint256[2] memory numbers,
         Status status,
         string memory requirement
     ) {
         ExchangeCore memory core = exchangeCores[exchangeId];
         return (
             [core.initiator, core.counterparty],
-            [core.stakeAmount, core.createdAt, core.deadline],
+            [core.stakeAmount, core.createdAt],
             core.status,
             exchangeDetails[exchangeId].requirement
         );
@@ -403,19 +411,96 @@ contract CollabLearn is EduToken{
             details.ratingDeadline
         );
     }
-
     
 
     // -----------------------------------------
     // Marketplace (sell education resource, like tut, notes ...)
     // -----------------------------------------
-    // frontend approval
-    // func - transfer from (buyer -> owner, owner -> seller)
-    // stake eduToken
+    struct Listing {
+        address seller;
+        string contentLink; // Encrypted content reference
+        string description;
+        uint256 price;
+    }
+
+    uint256 public listingCount = 0;
+    mapping(uint256 => Listing) public listings;
 
 
+    event ListingCreated(uint256 indexed listingId, address seller);
+    event ListingPurchased(uint256 indexed listingId, address buyer);
 
-    // -----------------------------------------
-    // lucky draw / reward - reputation points / certain active point
-    // -----------------------------------------
+    // Create a new marketplace listing
+    function createListing(
+        string calldata contentLink,
+        string calldata description,
+        uint256 price
+    ) external {
+        require(price > 0, "Price must be positive");
+        
+        listingCount++;
+        listings[listingCount] = Listing(
+            msg.sender,
+            contentLink,
+            description,
+            price
+        );
+        
+        emit ListingCreated(listingCount, msg.sender);
+    }
+
+    /*function commitToBuy(bytes32 commitment) external {
+        commitments[commitment] = true;
+        emit PurchaseCommitted(msg.sender, commitment);
+    }
+
+    function revealAndBuy(
+        uint256 listingId, 
+        string calldata secret
+    ) external nonReentrant {
+        bytes32 commitment = keccak256(
+            abi.encodePacked(
+                uint256(listingId),  // Ensure it's padded to 32 bytes
+                msg.sender,          // This will be in checksum format
+                bytes(secret)        // Convert string to bytes
+            )
+        );
+        require(commitments[commitment], "No valid commitment");
+        require(listingBuyers[listingId] == address(0), "Already sold");
+        
+        Listing storage listing = listings[listingId];
+        require(_balances[msg.sender] >= listing.price, "Insufficient balance");
+        require(msg.sender != listing.seller, "Cannot buy your own listing");
+
+        listingBuyers[listingId] = msg.sender;
+        _transfer(msg.sender, listing.seller, listing.price);
+        delete commitments[commitment];
+        emit ListingPurchased(listingId, msg.sender);
+    }*/
+
+
+    // Purchase an existing listing
+   function buyListing(uint256 listingId) external nonReentrant {
+        Listing storage listing = listings[listingId];
+        //require(listing.active, "Listing not active");
+        require(_balances[msg.sender] >= listing.price, "Insufficient balance");
+        require(msg.sender != listing.seller, "Cannot buy your own listing");
+
+        // Transfer tokens from buyer to seller
+        _transfer(msg.sender, listing.seller, listing.price);
+        
+        
+        emit ListingPurchased(listingId, msg.sender);
+    }
+
+    // Get all active listings (frontend can filter)
+    function getAllListings() external view returns (Listing[] memory) {
+        Listing[] memory allListings = new Listing[](listingCount);
+        for (uint256 i = 1; i <= listingCount; i++) {
+            allListings[i-1] = listings[i];
+        }
+        return allListings;
+    }
+
+
 }

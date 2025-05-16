@@ -40,21 +40,24 @@ function App() {
       const ethBal = await newProvider.getBalance(accounts[0]);
       setEthBalance(ethers.formatEther(ethBal).substring(0, 6));
       
-      const contract = new ethers.Contract(
-        collabLearnAddress,
-        collabLearnABI,
-        signer
-      );
-      
-      const eduBal = await contract.balanceOf(accounts[0]);
-      setEduBalance(ethers.formatUnits(eduBal, 18));
+      try {
+        const contract = new ethers.Contract(
+          collabLearnAddress,
+          collabLearnABI,
+          signer
+        );
+        
+        const eduBal = await contract.balanceOf(accounts[0]);
+        setEduBalance(ethers.formatUnits(eduBal, 18));
 
-      // Check claim status
-      const claimedStatus = await contract.hasClaimed(accounts[0]);
-      setHasClaimed(claimedStatus);
-      
-      /*const canClaim = await contract.canClaim(accounts[0]);
-      setCanClaimTokens(canClaim);*/
+        // Check claim status
+        const claimedStatus = await contract.hasClaimed(accounts[0]);
+        setHasClaimed(claimedStatus);
+      } catch (contractError) {
+        console.log("Contract not deployed or not accessible:", contractError);
+        setEduBalance('0');
+        setHasClaimed(false);
+      }
 
     } catch (error) {
       console.error("Wallet connection error:", error);

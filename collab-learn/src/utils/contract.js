@@ -1,4 +1,4 @@
-export const collabLearnAddress = "0x013eC95B0011F9A9A8d1F4078795EE98e6247cF7";
+export const collabLearnAddress = "0xFA990aac1424Eb88F2c0bb4e055b5d7FF5a91300";
 
 export const collabLearnABI = [
 	{

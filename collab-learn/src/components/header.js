@@ -60,7 +60,7 @@ const Header = ({ account, ethBalance, eduBalance, network, connectWallet }) => 
                         </div>
                         <div>
                           <p className="font-medium text-sm">
-                            {network?.name === 'holesky' ? 'Holesky Testnet' : network?.name || 'Unknown Network'}
+                            {network?.name === 'sepolia' ? 'Sepolia Testnet' : network?.name || 'Unknown Network'}
                           </p>
                           <p className="text-xs text-gray-500">Connected</p>
                         </div>
@@ -91,9 +91,9 @@ const Header = ({ account, ethBalance, eduBalance, network, connectWallet }) => 
         </div>
       </div>
 
-      {network && network.chainId !== 17000n && (
+      {network && network.chainId !== 11155111n && (
         <div className="text-center py-2 bg-orange-100 text-orange-700">
-          ⚠️ You're not on Holesky Testnet! Some features may not work properly.
+          ⚠️ You're not on Sepolia Testnet! Some features may not work properly.
         </div>
       )}
     </header>

@@ -118,9 +118,9 @@ function MainPage({
         </div>
         
         {/* Network Warning */}
-        {network && network.chainId !== 17000n && (
+        {network && network.chainId !== 11155111n && (
           <div className="mb-8 p-4 bg-orange-100 text-orange-700 rounded-lg border border-orange-200 max-w-2xl mx-auto">
-            ⚠️ You're not on Holesky Testnet! Please switch to Holesky to use this application.
+            ⚠️ You're not on Sepolia Testnet! Please switch to Sepolia to use this application.
           </div>
         )}
         

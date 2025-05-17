@@ -1,4 +1,4 @@
-export const collabLearnAddress = "0xFA990aac1424Eb88F2c0bb4e055b5d7FF5a91300";
+export const collabLearnAddress = "0x4Bff161baa75F797f71B0ba5e8187beb8df5C763";
 
 export const collabLearnABI = [
 	{
@@ -811,6 +811,30 @@ export const collabLearnABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{

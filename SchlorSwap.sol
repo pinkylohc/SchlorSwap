@@ -4,19 +4,18 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-interface SwapToken { // define the Swaptoken, follow ERC20 standard
-    //function _transfer(address from, address to, uint256 amount) external returns  (bool);
+interface EduToken { // define the Swaptoken, follow ERC20 standard
+    function transfer(address _to, uint256 _value) external returns (bool);
     function totalSupply() external view returns (uint256);
     function balanceOf(address _owner) external view returns (uint256);
-    
     
     event Transfer(address indexed from, address indexed to, uint256 value);
 }
 
 
-contract SchlorSwap is SwapToken, ReentrancyGuard{
+contract SchlorSwap is EduToken, ReentrancyGuard{
     // -----------------------------------------
-    // SwapToken State & Functions
+    // EduToken State & Functions
     // -----------------------------------------
     address owner; // only for address owner
 
@@ -67,7 +66,8 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         emit TokensPurchased(msg.sender, msg.value, tokensToBuy);
     } 
 
-    // mint new token to a addr.
+    // mint new token to a addr., no direct mint by user
+    // restrct to only call by other functions, access control in those functions
     function _mint(address account, uint256 amount) internal { 
         require(account != address(0), "mint to null addr");
         
@@ -98,6 +98,13 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         return true;
     }*/
 
+    // for transfer from msg.sender
+    function transfer(address to, uint256 amount) external override returns (bool) {
+        _transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    // for transfer from contract address (return stake)
     function _transfer(address from, address to, uint256 amount) internal {
         require(to != address(0), "Transfer to zero address");
         require(_balances[from] >= amount, "Insufficient balance");
@@ -107,7 +114,7 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         emit Transfer(from, to, amount);
     }
 
-    
+    // contract owner withdraw Eth
     function withdraw() external onlyOwner {
         payable(owner).transfer(address(this).balance);
     }
@@ -153,6 +160,7 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
     event ExchangeExpired(uint256 indexed exchangeId);
     event PurchaseCommitted(address indexed buyer, bytes32 commitment); // Add commitment event
 
+    // create exchange by initiator with parameter
     function createExchange(
         string calldata contentLink, 
         string calldata description,
@@ -190,6 +198,7 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         emit ExchangeCreated(newExchangeId, msg.sender);
     }
 
+    // a commit-reveal scheme
     function commitToMatchExchange(bytes32 commitment) external {
         commitments[commitment] = true;
         emit PurchaseCommitted(msg.sender, commitment);
@@ -317,6 +326,7 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         _finalizeExchange(exchangeId);
     }
 
+    // Check if the exchange finished (stake returned)
     function _finalizeExchange(uint256 exchangeId) internal {
         ExchangeCore storage core = exchangeCores[exchangeId];
         ExchangeDetails storage details = exchangeDetails[exchangeId];
@@ -349,6 +359,7 @@ contract SchlorSwap is SwapToken, ReentrancyGuard{
         core.status = Status.Completed;
         emit ExchangeCompleted(exchangeId);
     }
+    
     // View functions
     function getExchangeContent(uint256 exchangeId) external view returns (
         string memory initiatorContent,

@@ -7,6 +7,12 @@ CollabLearn is a decentralized application (DApp) built on Ethereum that facilit
 -**collab-learn**: The ReactJS frontend code folder
 -**SchlorSwap.sol**: The smart contract code
 
+## run the frontend code
+```bash
+   cd collab-learn
+   npm install
+   npm start
+```
 
 ## Features
 
@@ -34,10 +40,12 @@ The frontend is built using React.js and allows users to interact with the Colla
 - **Token Purchase Form**: Interface for buying EduTokens.
 - **MarketPlace**: UI for users to buy or sell resources.
 - **Exchange Page**: Interface for exchange resource with other user
+
 ### Getting Started
 
 1. **Clone the Repository**:
    ```bash
    https://github.com/pinkylohc/SchlorSwap.git
    cd collab-learn
+   npm install
    npm start

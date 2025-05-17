@@ -1,5 +1,6 @@
-frontend link: https://collab-learn-iota.vercel.app/
-alternative link: https://collab-learn-git-main-pinkylos-projects.vercel.app/
+frontend link (this may not work sometime): https://collab-learn-iota.vercel.app/
+alternative link 1: https://collab-learn-pinkylos-projects.vercel.app/
+alternative link 2: https://collab-learn-git-main-pinkylos-projects.vercel.app/
 
 testnet: Sepolia testnet
 contract link: https://sepolia.etherscan.io/address/0x4bff161baa75f797f71b0ba5e8187beb8df5c763

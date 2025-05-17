@@ -170,7 +170,11 @@ const ActiveExchanges = ({ contract, account, onMatch, showNotification }) => {
               <div>
                 <p className="text-gray-600"><span className="font-medium">Requires:</span> {ex.requirement}</p>
                 <p><span className="font-medium">Stake:</span> {ex.stake} EDU</p>
+                {ex.initiator.toLowerCase() === account?.toLowerCase() && (
+                  <p className="text-sm text-blue-600 mt-1">(This is your exchange)</p>
+                )}
               </div>
+              
               
               <div className="space-y-2">
                 <input
@@ -179,14 +183,14 @@ const ActiveExchanges = ({ contract, account, onMatch, showNotification }) => {
                   className="border p-2 w-full rounded"
                   value={matchData.exchangeId === ex.id ? matchData.contentLink : ''}
                   onChange={e => setMatchData({...matchData, exchangeId: ex.id, contentLink: e.target.value})}
-                  disabled={actionLoading || commitments[ex.id]?.committed}
+                  disabled={actionLoading || commitments[ex.id]?.committed || ex.initiator.toLowerCase() === account?.toLowerCase()}
                 />
                 <textarea
                   placeholder="Your description"
                   className="border p-2 w-full rounded"
                   value={matchData.exchangeId === ex.id ? matchData.description : ''}
                   onChange={e => setMatchData({...matchData, exchangeId: ex.id, description: e.target.value})}
-                  disabled={actionLoading || commitments[ex.id]?.committed}
+                  disabled={actionLoading || commitments[ex.id]?.committed || ex.initiator.toLowerCase() === account?.toLowerCase()}
                   rows={3}
                 />
                 {commitments[ex.id]?.committed ? (
@@ -215,7 +219,9 @@ const ActiveExchanges = ({ contract, account, onMatch, showNotification }) => {
                         <span className="animate-spin inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
                         Processing...
                       </span>
-                    ) : 'Commit to Match'}
+                    ) : ex.initiator.toLowerCase() === account?.toLowerCase() ?
+                    "This is Your Exchange":
+                    'Commit to Match'}
                   </button>
                 )}
               </div>

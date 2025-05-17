@@ -2,9 +2,15 @@
 
 CollabLearn is a decentralized application (DApp) built on Ethereum that facilitates educational resource sharing, marketplace transactions through a tokenized system. Users can earn and stake tokens, purchase or exchange various educational resources.
 
+## Folder Structure
+
+-**collab-learn**: The ReactJS frontend code folder
+-**SchlorSwap.sol**: The smart contract code
+
+
 ## Features
 
-- **SwapToken**: An ERC20 token used for transactions within the platform.
+- **EduToken**: An ERC20 token used for transactions within the platform.
 - **Token Purchase**: Users can buy EduTokens with Ether.
 - **Initial Token Claim**: New users can claim free initial tokens.
 - **Marketplace**: Users can list and buy educational resources.
